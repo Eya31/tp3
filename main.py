@@ -1,11 +1,21 @@
 import socket
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+
+from fastapi import FastAPI,HTTPException
+*from pydantic import BaseModel
 
 app = FastAPI()
 
-DEVELOPER = "Dev2"  # remplacez par votre nom
+class Numbers(BaseModel):
+    a: float
+    b: float
 
+@app.post("/multiply")
+def multiply_numbers(nums: Numbers):
+    result = nums.a * nums.b
+    return {
+        "result a*b=": result,
+        "developer": "Dev1"
+    }
 
 def get_ip() -> str:
     """IP de l'interface réseau utilisée pour sortir sur internet."""
