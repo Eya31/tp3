@@ -1,21 +1,17 @@
 import socket
 
-from fastapi import FastAPI,HTTPException
-*from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 app = FastAPI()
 
-class Numbers(BaseModel):
+DEVELOPER = "Dev2"  # remplacez par votre nom
+
+
+class Operands(BaseModel):
     a: float
     b: float
 
-@app.post("/multiply")
-def multiply_numbers(nums: Numbers):
-    result = nums.a * nums.b
-    return {
-        "result a*b=": result,
-        "developer": "Dev1"
-    }
 
 def get_ip() -> str:
     """IP de l'interface réseau utilisée pour sortir sur internet."""
@@ -29,14 +25,24 @@ def get_ip() -> str:
         s.close()
 
 
+def compute_multiply(a: float, b: float) -> dict:
+    return {"result a*b": a * b, "developer": "Dev1"}
+
+
+def compute_divide(a: float, b: float) -> dict:
+    if b == 0:
+        raise HTTPException(status_code=400, detail="Division par zéro impossible")
+    return {"result a/b": a / b, "developer": "Dev2"}
+
+
 @app.get("/")
 def read_root():
-    return {"message": "Hello World"}
+    return {"message": "it works !"}
+
 
 @app.get("/addition")
 def addition(a: int, b: int):
     return {"result a+b": a + b, "developer": "Dev1"}
-    return {"message": "it works !"}
 
 
 @app.get("/greeting")
@@ -47,13 +53,23 @@ def greeting(name: str):
         "hostname": socket.gethostname(),
         "IP": get_ip(),
     }
-class Operands(BaseModel):
-    a: float
-    b: float
+
+
+@app.get("/multiply")
+def multiply_get(a: float, b: float):
+    return compute_multiply(a, b)
+
+
+@app.post("/multiply")
+def multiply_post(op: Operands):
+    return compute_multiply(op.a, op.b)
+
+
+@app.get("/divide")
+def divide_get(a: float, b: float):
+    return compute_divide(a, b)
 
 
 @app.post("/divide")
-def divide(op: Operands):
-    if op.b == 0:
-        raise HTTPException(status_code=400, detail="Division par zéro impossible")
-    return {"result a/b": op.a / op.b, "developer": "Dev2"}
+def divide_post(op: Operands):
+    return compute_divide(op.a, op.b)
