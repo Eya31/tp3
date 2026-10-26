@@ -5,10 +5,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-DEVELOPER = "Dev2"  # remplacez par votre nom
-
-# Stock de données en mémoire (utilisé par PUT /update/{id})
-items = {1: {"name": "item1"}, 2: {"name": "item2"}}
+DEVELOPER = "Dev1"  # ou Dev2 selon le responsable de la fonction delete
 
 
 class Operands(BaseModel):
@@ -36,6 +33,13 @@ def compute_divide(a: float, b: float) -> dict:
     if b == 0:
         raise HTTPException(status_code=400, detail="Division par zéro impossible")
     return {"result a/b": a / b, "developer": "Dev2"}
+
+
+def compute_delete(item_id: int) -> dict:
+    return {
+        "message": f"Item {item_id} deleted successfully",
+        "developer": DEVELOPER,
+    }
 
 
 @app.get("/")
@@ -77,25 +81,19 @@ def divide_get(a: float, b: float):
 def divide_post(op: Operands):
     return compute_divide(op.a, op.b)
 
-@app.get("/items")
-def list_items():
-    return items
-class ItemUpdate(BaseModel):
-    name: str
+
+# --- Nouveaux endpoints pour delete (avec support GET, POST et DELETE) ---
+
+@app.get("/remove/{item_id}")
+def delete_get(item_id: int):
+    return compute_delete(item_id)
 
 
-def apply_update(id: int, name: str) -> dict:
-    if id not in items:
-        raise HTTPException(status_code=404, detail="Item introuvable")
-    items[id]["name"] = name
-    return {"id": id, "item": items[id]}
+@app.post("/remove/{item_id}")
+def delete_post(item_id: int):
+    return compute_delete(item_id)
 
 
-@app.put("/update/{id}")
-def update_item(id: int, item: ItemUpdate):
-    return apply_update(id, item.name)
-
-
-@app.get("/update/{id}")
-def update_item_get(id: int, name: str):
-    return apply_update(id, name)
+@app.delete("/remove/{item_id}")
+def delete_item(item_id: int):
+    return compute_delete(item_id)
