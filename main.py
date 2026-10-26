@@ -5,71 +5,72 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-DEVELOPER = "Dev2"  # remplacez par votre nom
+DEVELOPER = "Dev1"  # Remplacer par votre nom ou rôle
+
+# Stock de données en mémoire (simulant une base de données)
+items = {1: {"name": "item1"}, 2: {"name": "item2"}}
 
 
-class Operands(BaseModel):
-    a: float
-    b: float
+class ItemUpdate(BaseModel):
+  name: str
 
 
 def get_ip() -> str:
-    """IP de l'interface réseau utilisée pour sortir sur internet."""
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))  # aucun paquet n'est envoyé
-        return s.getsockname()[0]
-    except OSError:
-        return "unknown"
-    finally:
-        s.close()
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  try:
+    s.connect(("8.8.8.8", 80))
+    return s.getsockname()[0]
+  except OSError:
+    return "unknown"
+  finally:
+    s.close()
 
 
-def compute_multiply(a: float, b: float) -> dict:
-    return {"result a*b": a * b, "developer": "Dev1"}
-
-
-def compute_divide(a: float, b: float) -> dict:
-    if b == 0:
-        raise HTTPException(status_code=400, detail="Division par zéro impossible")
-    return {"result a/b": a / b, "developer": "Dev2"}
+# --- Logique de suppression similaire à apply_update ---
+def apply_delete(id: int) -> dict:
+  if id not in items:
+    raise HTTPException(status_code=404, detail="Item introuvable")
+  deleted_item = items.pop(id)
+  return {
+      "message": f"Item {id} deleted successfully",
+      "deleted": deleted_item,
+      "developer": DEVELOPER,
+  }
 
 
 @app.get("/")
 def read_root():
-    return {"message": "it works !"}
+  return {"message": "it works !"}
 
 
-@app.get("/addition")
-def addition(a: int, b: int):
-    return {"result a+b": a + b, "developer": "Dev1"}
+@app.get("/items")
+def list_items():
+  return items
 
 
-@app.get("/greeting")
-def greeting(name: str):
-    return {
-        "message": f"Hello, {name}",
-        "developer": DEVELOPER,
-        "hostname": socket.gethostname(),
-        "IP": get_ip(),
-    }
+# --- Routes pour PUT (Mise à jour) ---
+@app.put("/update/{id}")
+def update_item(id: int, item: ItemUpdate):
+  if id not in items:
+    raise HTTPException(status_code=404, detail="Item introuvable")
+  items[id]["name"] = item.name
+  return {"id": id, "item": items[id]}
 
 
-@app.get("/multiply")
-def multiply_get(a: float, b: float):
-    return compute_multiply(a, b)
+@app.get("/update/{id}")
+def update_item_get(id: int, name: str):
+  if id not in items:
+    raise HTTPException(status_code=404, detail="Item introuvable")
+  items[id]["name"] = name
+  return {"id": id, "item": items[id]}
 
 
-@app.post("/multiply")
-def multiply_post(op: Operands):
-    return compute_multiply(op.a, op.b)
+# --- Routes pour DELETE (Suppression) ---
+@app.delete("/remove/{id}")
+def delete_item(id: int):
+  return apply_delete(id)
 
 
-@app.get("/divide")
-def divide_get(a: float, b: float):
-    return compute_divide(a, b)
-
-
-@app.post("/divide")
-def divide_post(op: Operands):
-    return compute_divide(op.a, op.b)
+@app.get("/remove/{id}")
+def delete_item_get(id: int):
+  return apply_delete(id)
