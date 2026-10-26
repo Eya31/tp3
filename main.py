@@ -37,6 +37,12 @@ def compute_divide(a: float, b: float) -> dict:
         raise HTTPException(status_code=400, detail="Division par zéro impossible")
     return {"result a/b": a / b, "developer": "Dev2"}
 
+def compute_delete(item_id: int) -> dict:
+    return {
+        "message": f"Item {item_id} deleted successfully",
+        "developer": DEVELOPER,
+    }
+
 
 @app.get("/")
 def read_root():
@@ -99,3 +105,17 @@ def update_item(id: int, item: ItemUpdate):
 @app.get("/update/{id}")
 def update_item_get(id: int, name: str):
     return apply_update(id, name)
+
+@app.get("/remove/{item_id}")
+def delete_get(item_id: int):
+    return compute_delete(item_id)
+
+
+@app.post("/remove/{item_id}")
+def delete_post(item_id: int):
+    return compute_delete(item_id)
+
+
+@app.delete("/remove/{item_id}")
+def delete_item(item_id: int):
+    return compute_delete(item_id)
