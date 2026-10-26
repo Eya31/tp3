@@ -7,6 +7,9 @@ app = FastAPI()
 
 DEVELOPER = "Dev2"  # remplacez par votre nom
 
+# Stock de données en mémoire (utilisé par PUT /update/{id})
+items = {1: {"name": "item1"}, 2: {"name": "item2"}}
+
 
 class Operands(BaseModel):
     a: float
@@ -73,3 +76,26 @@ def divide_get(a: float, b: float):
 @app.post("/divide")
 def divide_post(op: Operands):
     return compute_divide(op.a, op.b)
+
+@app.get("/items")
+def list_items():
+    return items
+class ItemUpdate(BaseModel):
+    name: str
+
+
+def apply_update(id: int, name: str) -> dict:
+    if id not in items:
+        raise HTTPException(status_code=404, detail="Item introuvable")
+    items[id]["name"] = name
+    return {"id": id, "item": items[id]}
+
+
+@app.put("/update/{id}")
+def update_item(id: int, item: ItemUpdate):
+    return apply_update(id, item.name)
+
+
+@app.get("/update/{id}")
+def update_item_get(id: int, name: str):
+    return apply_update(id, name)
