@@ -1,3 +1,5 @@
+"""Tests unitaires de l'API du TP3."""
+# pylint: disable=missing-function-docstring,missing-class-docstring,unused-argument,too-few-public-methods
 import pytest
 from fastapi.testclient import TestClient
 

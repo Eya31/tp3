@@ -7,7 +7,19 @@ on:
     branches: [main]
 
 jobs:
+  pylint:
+    runs-on: ubuntu-latest
+    container: python:3.13-slim
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pylint
+
+      - name: Analyse pylint
+        run: pylint main.py test_main.py
   run-test:
+    needs: pylint
     runs-on: ubuntu-latest
     container: python:3.12-slim
     steps:
@@ -26,6 +38,7 @@ jobs:
           name: junit-report
           path: report.xml
   calculate-coverage:
+    needs: pylint
     runs-on: ubuntu-latest
     container: python:3.12-slim
     steps:
