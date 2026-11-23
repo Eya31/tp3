@@ -119,3 +119,6 @@ def delete_post(item_id: int):
 @app.delete("/remove/{item_id}")
 def delete_item(item_id: int):
     return compute_delete(item_id)
+@app.get("/soustraction")
+def soustraction(a: int, b: int):
+    return {"resultat": a - b}
